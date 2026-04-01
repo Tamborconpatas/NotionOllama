@@ -1,0 +1,31 @@
+{
+  "name": "notion-ollama",
+  "version": "0.0.1",
+  "description": "Una alternativa privada, local y gratuita para uso personal a Notion AI potenciada por Ollama (qwen2.5 y moondream).",
+  "main": "main.js",
+  "scripts": {
+    "test": "node main.js"
+  },
+  "keywords": [
+    "ollama",
+    "notion",
+    "ai",
+    "local",
+    "privado",
+    "qwen2.5",
+    "moondream"
+  ],
+  "author": "Tamborconpatas <Tambotconpatas@proton.me>",
+  "license": "MIT AND Commons-Clause-1.0",
+  "type": "commonjs",
+  "dependencies": {
+    "@clack/prompts": "^1.1.0",
+    "@notionhq/client": "^5.16.0",
+    "axios": "^1.14.0",
+    "ddg-scraper": "^1.0.2",
+    "dotenv": "^17.3.1",
+    "marked": "^17.0.5",
+    "ora": "^5.4.1",
+    "picocolors": "^1.1.1"
+  }
+}
