@@ -11,7 +11,9 @@ const p = require('@clack/prompts');
 const pc = require('picocolors');
 const ora = require('ora');
 
-const { promptUrl, promptAction, promptSubAction, promptReview, promptDestination, promptImage } = require('./src/ui');
+const { runSetupIfNeeded } = require('./src/setup');
+const { getOllamaModels } = require('./src/ai-provider');
+const { promptUrl, promptAction, promptSubAction, promptReview, promptDestination, promptImage, promptProvider, promptOllamaModel, promptCloudModel } = require('./src/ui');
 const { runAction } = require('./src/actions');
 const {
   getPageTextContent,
@@ -56,7 +58,9 @@ function getHistory() {
 
 async function main() {
   console.clear();
-  p.intro(pc.bgCyan(pc.black(' NotionAI local con Ollama 🚀 ')));
+  p.intro(pc.bgCyan(pc.black(' NotionAI Multimodal 🚀 ')));
+
+  await runSetupIfNeeded();
 
   while (true) {
     try {
@@ -72,6 +76,23 @@ async function main() {
         continue;
       }
 
+      const provider = await promptProvider();
+      if (!provider) continue;
+
+      let model;
+      if (provider === 'ollama') {
+        const spinnerModel = ora('Buscando modelos locales...').start();
+        const models = await getOllamaModels();
+        spinnerModel.stop();
+        model = await promptOllamaModel(models);
+        if (!model) continue;
+      } else {
+        model = await promptCloudModel(provider);
+        if (model === null) continue;
+      }
+
+      const aiConfig = { provider, model };
+
       while (true) {
         const action = await promptAction();
         if (action === 'back') break;
@@ -86,7 +107,18 @@ async function main() {
             try {
               const base64Data = fs.readFileSync(imagePath).toString('base64');
               images.push(base64Data);
-              p.log.success('📸 Imagen cargada correctamente (usando moondream).');
+              if (aiConfig.provider === 'ollama') {
+                const visionKeywords = ['vision', 'llava', 'moondream', 'pixtral', 'minicpm'];
+                const hasVision = visionKeywords.some(kw => aiConfig.model.toLowerCase().includes(kw));
+                if (!hasVision) {
+                  aiConfig.model = 'moondream';
+                  p.log.success(`📸 Imagen cargada. (Se cambió a 'moondream' porque el modelo original no soporta visión).`);
+                } else {
+                  p.log.success(`📸 Imagen cargada correctamente (usando modelo local con visión: ${aiConfig.model}).`);
+                }
+              } else {
+                p.log.success('📸 Imagen cargada correctamente.');
+              }
             } catch (err) {
               p.log.warn('No se pudo leer la imagen: ' + err.message);
             }
@@ -110,14 +142,22 @@ async function main() {
         let aiResponse = '';
 
         while (!isApproved) {
-          spinner.start('🤖 La IA está pensando (esto puede tardar unos segundos)...');
+          spinner.start(`🤖 ${provider} (${model}) está pensando...`);
           try {
-            aiResponse = await runAction(action, subChoice, context, images);
+            aiResponse = await runAction(action, subChoice, context, images, aiConfig);
             spinner.succeed('IA ha respondido.');
           } catch (e) {
-            spinner.fail('Error al consultar Ollama local.');
+            spinner.fail(`Error al consultar ${provider}.`);
             p.log.error(e.message);
             break;
+          }
+
+          if (action === 'translate') {
+            const isIdentical = aiResponse.replace(/\s+/g, '').toLowerCase() === context.replace(/\s+/g, '').toLowerCase();
+            if (isIdentical) {
+              p.log.warn('⚠️ Cancelado: La traducción devuelta es idéntica al texto original (el texto ya estaba en ese idioma o no requiere traducción).');
+              break;
+            }
           }
 
           const reviewAction = await promptReview(aiResponse);
