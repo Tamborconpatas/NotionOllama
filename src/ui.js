@@ -61,7 +61,7 @@ async function promptAction() {
       { value: 'lengthen', label: '➕ Hacer más largo', hint: 'Mejora' },
       { value: 'shorten', label: '✂️ Hacer más corto', hint: 'Mejora' },
       { value: 'simplify', label: '🌱 Simplificar lenguaje', hint: 'Mejora' },
-      { value: 'translate', label: '🌐 Traducir', hint: 'No funciona correctamente' },
+      { value: 'translate', label: '🌐 Traducir', hint: 'Mejora' },
 
       { value: 'search', label: '🔍 Buscar más info en Internet', hint: 'No implementado' },
       { value: 'qa', label: '💬 Hacer una pregunta específica', hint: 'Personalizado' },
@@ -199,4 +199,79 @@ async function promptDestination(action) {
   return result;
 }
 
-module.exports = { promptUrl, promptAction, promptSubAction, promptReview, promptDestination, promptImage };
+async function promptProvider() {
+  const provider = await p.select({
+    message: '¿Qué motor de Inteligencia Artificial deseas usar en esta sesión?',
+    options: [
+      { value: 'ollama', label: '🦙 Ollama (Local)', hint: 'Gratis, Privado' },
+      { value: 'openai', label: '🟢 OpenAI (ChatGPT)', hint: 'Requiere OPENAI_API_KEY' },
+      { value: 'anthropic', label: '🟣 Anthropic (Claude)', hint: 'Requiere ANTHROPIC_API_KEY' },
+      { value: 'google', label: '🔵 Google (Gemini)', hint: 'Requiere GEMINI_API_KEY' },
+      { value: 'azure', label: '☁️ Azure OpenAI', hint: 'Requiere AZURE_OPENAI_API_KEY' },
+      { value: 'aws', label: '🟠 AWS Bedrock', hint: 'Requiere AWS_ACCESS_KEY_ID' }
+    ]
+  });
+  if (p.isCancel(provider)) return null;
+  return provider;
+}
+
+async function promptOllamaModel(models) {
+  if (!models || models.length === 0) return 'qwen2.5:3b';
+  const selected = await p.select({
+    message: 'Selecciona el modelo de Ollama que deseas utilizar:',
+    options: models.map(m => ({ value: m, label: m })),
+    maxItems: 10
+  });
+  if (p.isCancel(selected)) return null;
+  return selected;
+}
+
+async function promptCloudModel(provider) {
+  const defaults = {
+    openai: [
+      { value: 'gpt-4o-mini', label: 'GPT-4o Mini (Rápido y barato)' },
+      { value: 'gpt-4o', label: 'GPT-4o (Equilibrado)' },
+      { value: 'o1-mini', label: 'OpenAI o1-mini (Razonamiento rápido)' },
+      { value: 'o1', label: 'OpenAI o1 (Razonamiento profundo)' }
+    ],
+    anthropic: [
+      { value: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku (Rápido)' },
+      { value: 'claude-3-5-sonnet-latest', label: 'Claude 3.5 Sonnet (Recomendado)' },
+      { value: 'claude-3-7-sonnet-latest', label: 'Claude 3.7 Sonnet (Nuevo)' },
+      { value: 'claude-3-opus-latest', label: 'Claude 3 Opus (Análisis Completo)' }
+    ],
+    google: [
+      { value: 'gemini-pro-latest', label: 'Gemini 3.1 Pro (Mayor razonamiento e inteligencia)' },
+      { value: 'gemini-flash-latest', label: 'Gemini 3.0 Flash (Extremadamente Rápido)' },
+      { value: 'gemini-flash-lite-latest', label: 'Gemini 3.1 Flash Lite (Extremadamente Rápido)' },
+      { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash (Clásico y rápido)' },
+      { value: 'gemma-4-26b-a4b-it', label: 'Gemma 4 26B (Ligero / Local-ish)' },
+      { value: 'gemma-4-31b-it', label: 'Gemma 4 31B (Rendimiento equilibrado)' }
+    ],
+    azure: [
+      { value: 'gpt-4o-mini', label: 'Modelo configurado en el Deployment de Azure' },
+      { value: 'gpt-4o', label: 'GPT-4o (Equilibrado)' },
+      { value: 'o3-mini', label: 'OpenAI o3-mini (Razonamiento rápido)' },
+      { value: 'o3', label: 'OpenAI o3 (Razonamiento profundo)' }
+    ],
+    aws: [
+      { value: 'anthropic.claude-3-haiku-20240307-v1:0', label: 'Claude 3 Haiku (AWS Bedrock)' },
+      { value: 'anthropic.claude-3-5-sonnet-20240620-v1:0', label: 'Claude 3.5 Sonnet (AWS Bedrock)' },
+      { value: 'anthropic.claude-3-7-sonnet-20240620-v1:0', label: 'Claude 3.7 Sonnet (AWS Bedrock)' },
+      { value: 'anthropic.claude-3-opus-20240620-v1:0', label: 'Claude 3 Opus (AWS Bedrock)' }
+    ]
+  };
+
+  const options = defaults[provider];
+  if (!options) return null;
+
+  const selected = await p.select({
+    message: 'Elige el modelo específico de la nube:',
+    options
+  });
+  
+  if (p.isCancel(selected)) return null;
+  return selected;
+}
+
+module.exports = { promptUrl, promptAction, promptSubAction, promptReview, promptDestination, promptImage, promptProvider, promptOllamaModel, promptCloudModel };

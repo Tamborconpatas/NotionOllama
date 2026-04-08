@@ -19,12 +19,16 @@
   "license": "MIT AND Commons-Clause-1.0",
   "type": "commonjs",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.82.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.1023.0",
     "@clack/prompts": "^1.1.0",
+    "@google/generative-ai": "^0.24.1",
     "@notionhq/client": "^5.16.0",
     "axios": "^1.14.0",
     "ddg-scraper": "^1.0.2",
     "dotenv": "^17.3.1",
     "marked": "^17.0.5",
+    "openai": "^6.33.0",
     "ora": "^5.4.1",
     "picocolors": "^1.1.1"
   }

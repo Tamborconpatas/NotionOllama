@@ -4,7 +4,7 @@
  * Licensed under the MIT License with the Commons Clause restriction.
  * See LICENSE.md for full terms.
  */
-const { generateResponse } = require('../ollama-client');
+const { generateResponse } = require('./ai-provider');
 const { performSearch } = require('../search-client');
 
 async function getActionPrompt(action, subChoice, context) {
@@ -80,11 +80,52 @@ async function getActionPrompt(action, subChoice, context) {
   return '';
 }
 
-async function runAction(action, subPromptData, context, images = []) {
+function chunkText(text, maxChars = 3500) {
+  if (text.length <= maxChars) return [text];
+  const chunks = [];
+  const paragraphs = text.split('\n\n');
+  let currentChunk = '';
+  for (const p of paragraphs) {
+    if (currentChunk.length + p.length > maxChars && currentChunk.length > 0) {
+      chunks.push(currentChunk.trim());
+      currentChunk = p;
+    } else {
+      currentChunk += (currentChunk.length > 0 ? '\n\n' : '') + p;
+    }
+  }
+  if (currentChunk.trim()) chunks.push(currentChunk.trim());
+  return chunks;
+}
+
+async function runAction(action, subPromptData, context, images = [], aiConfig) {
+  if (aiConfig.provider === 'ollama' && context.length > 3500) {
+    const chunks = chunkText(context, 3500);
+    let combinedResponse = '';
+    
+    for (let i = 0; i < chunks.length; i++) {
+      const isFirst = i === 0;
+      let chunkContext = chunks[i];
+      const reminder = `\n\n--- RECORDATORIO IMPORTANTE ---\nEsta es la parte ${i+1}/${chunks.length} del texto original. Cíñete estrictamente a cumplir con la instrucción únicamente utilizando esta parte sin alucinar contenido, y omite introducciones o despedidas para que al juntar el texto con las demás partes fluya de forma natural.`;
+      const chunkPrompt = await getActionPrompt(action, subPromptData, chunkContext + reminder);
+      if (!chunkPrompt) throw new Error('Action prompt empty.');
+
+      let response = await generateResponse(chunkPrompt, isFirst ? images : [], aiConfig);
+      
+      combinedResponse += (combinedResponse.length > 0 ? '\n\n' : '') + response.trim();
+    }
+
+    if (action === 'diagram') {
+      const cleanMermaid = combinedResponse.replace(/```mermaid/gi, '').replace(/```/g, '').trim();
+      combinedResponse = `\`\`\`mermaid\n${cleanMermaid}\n\`\`\``;
+    }
+
+    return combinedResponse;
+  }
+
   const finalPrompt = await getActionPrompt(action, subPromptData, context);
   if (!finalPrompt) throw new Error('Action prompt empty.');
 
-  let response = await generateResponse(finalPrompt, null, images);
+  let response = await generateResponse(finalPrompt, images, aiConfig);
   if (action === 'diagram') {
     const cleanMermaid = response.replace(/```mermaid/gi, '').replace(/```/g, '').trim();
     response = `\`\`\`mermaid\n${cleanMermaid}\n\`\`\``;
