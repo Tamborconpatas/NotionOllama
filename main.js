@@ -60,6 +60,7 @@ async function main() {
   console.clear();
   p.intro(pc.bgCyan(pc.black(' NotionAI Multimodal 🚀 ')));
 
+  const usedOllamaModels = new Set();
   await runSetupIfNeeded();
 
   while (true) {
@@ -142,6 +143,7 @@ async function main() {
         let aiResponse = '';
 
         while (!isApproved) {
+          if (aiConfig.provider === 'ollama') usedOllamaModels.add(aiConfig.model);
           spinner.start(`🤖 ${provider} (${model}) está pensando...`);
           try {
             aiResponse = await runAction(action, subChoice, context, images, aiConfig);
@@ -233,6 +235,25 @@ async function main() {
     } catch (err) {
       if (err.name === 'CancelPromptError') break;
       p.log.error('Error crítico: ' + err.message);
+    }
+  }
+
+  if (usedOllamaModels.size > 0) {
+    const shouldStop = await p.confirm({
+      message: '¿Deseas descargar los modelos de Ollama de la memoria para que no consuman recursos en tu PC?',
+      initialValue: true
+    });
+
+    if (shouldStop && !p.isCancel(shouldStop)) {
+      const spinnerExit = ora('Liberando memoria RAM/VRAM de Ollama...').start();
+      const execP = require('util').promisify(require('child_process').exec);
+      try {
+        const promises = Array.from(usedOllamaModels).map(m => execP(`ollama stop ${m}`));
+        await Promise.all(promises);
+        spinnerExit.succeed('Recursos de memoria liberados exitosamente.');
+      } catch (e) {
+        spinnerExit.warn('Algunos modelos no se cerraron automáticamente (Ollama requere versión >=0.1.30).');
+      }
     }
   }
 
