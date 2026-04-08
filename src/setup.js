@@ -13,7 +13,7 @@ const ENV_PATH = path.join(__dirname, '..', '.env');
 
 async function runSetupIfNeeded() {
   if (fs.existsSync(ENV_PATH)) {
-    return; 
+    return;
   }
 
   console.clear();

@@ -101,16 +101,16 @@ async function runAction(action, subPromptData, context, images = [], aiConfig) 
   if (aiConfig.provider === 'ollama' && context.length > 3500) {
     const chunks = chunkText(context, 3500);
     let combinedResponse = '';
-    
+
     for (let i = 0; i < chunks.length; i++) {
       const isFirst = i === 0;
       let chunkContext = chunks[i];
-      const reminder = `\n\n--- RECORDATORIO IMPORTANTE ---\nEsta es la parte ${i+1}/${chunks.length} del texto original. Cíñete estrictamente a cumplir con la instrucción únicamente utilizando esta parte sin alucinar contenido, y omite introducciones o despedidas para que al juntar el texto con las demás partes fluya de forma natural.`;
+      const reminder = `\n\n--- RECORDATORIO IMPORTANTE ---\nEsta es la parte ${i + 1}/${chunks.length} del texto original. Cíñete estrictamente a cumplir con la instrucción únicamente utilizando esta parte sin alucinar contenido, y omite introducciones o despedidas para que al juntar el texto con las demás partes fluya de forma natural.`;
       const chunkPrompt = await getActionPrompt(action, subPromptData, chunkContext + reminder);
       if (!chunkPrompt) throw new Error('Action prompt empty.');
 
       let response = await generateResponse(chunkPrompt, isFirst ? images : [], aiConfig);
-      
+
       combinedResponse += (combinedResponse.length > 0 ? '\n\n' : '') + response.trim();
     }
 

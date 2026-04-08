@@ -34,7 +34,7 @@ async function getOllamaModels() {
     const response = await axios.get(`${baseUrl}/api/tags`);
     return response.data.models.map(m => m.name);
   } catch (error) {
-    return ['qwen2.5:3b', 'moondream']; // fallback
+    return ['qwen2.5:3b', 'moondream'];
   }
 }
 

@@ -269,7 +269,7 @@ async function promptCloudModel(provider) {
     message: 'Elige el modelo específico de la nube:',
     options
   });
-  
+
   if (p.isCancel(selected)) return null;
   return selected;
 }
