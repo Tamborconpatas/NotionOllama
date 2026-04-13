@@ -28,6 +28,7 @@
     "ddg-scraper": "^1.0.2",
     "dotenv": "^17.3.1",
     "marked": "^17.0.5",
+    "marked-terminal": "^7.3.0",
     "openai": "^6.33.0",
     "ora": "^5.4.1",
     "picocolors": "^1.1.1"

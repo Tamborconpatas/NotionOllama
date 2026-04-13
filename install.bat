@@ -5,7 +5,6 @@ echo        Instalador de NotionOllama (Windows)
 echo ====================================================
 echo.
 
-:: Checking for Node.js
 where node >nul 2>nul
 if %ERRORLEVEL% neq 0 (
     echo [X] Node.js no esta instalado.
@@ -17,7 +16,6 @@ if %ERRORLEVEL% neq 0 (
     echo [OK] Node.js esta instalado.
 )
 
-:: Checking for npm
 where npm >nul 2>nul
 if %ERRORLEVEL% neq 0 (
     echo [X] npm no esta instalado.
@@ -28,7 +26,6 @@ if %ERRORLEVEL% neq 0 (
     echo [OK] npm esta instalado.
 )
 
-:: Checking for Ollama
 where ollama >nul 2>nul
 if %ERRORLEVEL% neq 0 (
     echo [!] Ollama no esta instalado o no se encuentra en las variables de entorno.
