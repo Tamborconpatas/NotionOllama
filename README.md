@@ -85,7 +85,7 @@ node main.js
 - [x] Integrar chunks para paginas grandes
 - [x] Mejorar la funcionalidad de traducir
 - [x] Hacer un instalador para diferentes sistemas
-- [ ] Mejorar la vista previa de los cambios
+- [x] Mejorar la vista previa de los cambios
 - [ ] Mejorar interaccion con el usuario
 - [ ] Hacer funcionar el motor de busqueda
 - [ ] Hacer empaquetados para diferentes sistemas

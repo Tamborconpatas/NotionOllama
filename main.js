@@ -10,6 +10,13 @@ const path = require('path');
 const p = require('@clack/prompts');
 const pc = require('picocolors');
 const ora = require('ora');
+const { marked } = require('marked');
+const { markedTerminal } = require('marked-terminal');
+
+marked.use(markedTerminal({
+  reflowText: true,
+  width: 80
+}));
 
 const { runSetupIfNeeded } = require('./src/setup');
 const { getOllamaModels } = require('./src/ai-provider');
@@ -168,7 +175,18 @@ async function main() {
             break;
           }
           else if (reviewAction === 'preview') {
-            p.log.info(pc.cyan('\n=== VISTA PREVIA ===\n') + aiResponse + pc.cyan('\n====================\n'));
+            const originalWords = context ? context.trim().split(/\s+/).filter(w => w.length > 0).length : 0;
+            const newWords = aiResponse ? aiResponse.trim().split(/\s+/).filter(w => w.length > 0).length : 0;
+            const diff = newWords - originalWords;
+            const sign = diff > 0 ? '+' : '';
+
+            console.log(pc.cyan('\n╭────────────── 📄 VISTA PREVIA DE NOTION ──────────────╮\n'));
+            console.log(marked.parse(aiResponse).trim());
+            console.log(pc.cyan('\n├────────────────────── 📊 MÉTRICAS ─────────────────────┤'));
+            console.log(pc.cyan(`│ Palabras originales: ${originalWords.toString().padEnd(31)} │`));
+            console.log(pc.cyan(`│ Palabras generadas:  ${newWords.toString().padEnd(31)} │`));
+            console.log(pc.cyan(`│ Variación neta:      ${(sign + diff).padEnd(31)} │`));
+            console.log(pc.cyan('╰────────────────────────────────────────────────────────╯\n'));
           }
           else if (reviewAction === 'retry') {
             p.log.info(pc.yellow('Recalculando...'));

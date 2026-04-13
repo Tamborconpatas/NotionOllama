@@ -26,7 +26,6 @@ install_with_brew() {
     fi
 }
 
-# --- 1. Checking for Node.js ---
 if ! command -v node &> /dev/null; then
     echo -e "\033[1;31m[❌] Node.js no está instalado.\033[0m"
     
@@ -60,7 +59,6 @@ else
     echo -e "\033[1;32m[✓] Node.js está instalado ($(node -v)).\033[0m"
 fi
 
-# --- 2. Checking for npm ---
 if ! command -v npm &> /dev/null; then
     echo -e "\033[1;31m[❌] npm no está instalado.\033[0m"
     echo "Suele venir instalado con Node.js, por favor verifica tu instalación de Node."
@@ -69,7 +67,6 @@ else
     echo -e "\033[1;32m[✓] npm está instalado ($(npm -v)).\033[0m"
 fi
 
-# --- 3. Checking for Ollama ---
 if ! command -v ollama &> /dev/null; then
     echo -e "\033[1;33m[⚠️] Ollama no está instalado o no se encuentra en el PATH.\033[0m"
     
@@ -101,7 +98,6 @@ else
     echo -e "\033[1;32m[✓] Ollama está instalado.\033[0m"
 fi
 
-# --- 4. Install Dependencies ---
 echo ""
 echo -e "\033[1;34m[>] Instalando dependencias de NotionOllama...\033[0m"
 npm install
